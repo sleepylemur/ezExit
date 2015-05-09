@@ -1,4 +1,4 @@
-Other name ideas:  Sidestep , Eschewal , SMS (Short Message Slip)
+Other name ideas: Short Message Sidestep  , Eschewal
 #Smooth Exit
 
 ###Make your way out of an awkward situation

@@ -1,14 +1,9 @@
-
 <div class="col-lg-6 set-alarm-form">
     <h1 class="page-header">Set an Alarm</h1>
 
-    <h2>{{user.name}}</h2>
-    <h2>{{user.email}}</h2>
-    <h2>{{user.phone}}</h2>
-
-    <form ng-submit="setAlarm()">
+    <form class="form-inline" ng-submit="setAlarm()">
         <div class="form-group">
-            <label for="dateInput">Alarm Date and Time</label>
+            <label for="dateInput">Set Time</label>
             <input ng-model="time" class="form-control" id="dateInput" placeholder=
             "Enter datetime" type="datetime-local">
         </div>
@@ -16,20 +11,28 @@
         <div class="form-group">
             <label for="excuseInput">Excuse</label> <select ng-model="excuse" ng-options="excuse.id as excuse.title for excuse in excuses" class="form-control">
             </select>
-        </div><button class="btn btn-primary" type="submit">Set Alarm</button>
+        </div>
+        <button class="btn btn-primary" type="submit">Set Alarm</button>
     </form>
 </div>
 
-<div class="col-lg-6 alarm-instructions">
-    <h3 class="page-header">Emergency Alarm</h3>
+<div class="col-lg-3 alarm-instructions well">
+    <h3 class="sub-header">Emergency Alarm</h3>
 
-    <p>If you find yourself in a really bad spot , dont waste your
-    time! send an SMS text to +1 (347) 960-4498 with message : escape
-    {{ID}} and we will bail you out.</p>
+    <p>Stuck in a bad spot? Don't waste your
+    time! send us an SMS text to <b>+1 (347) 960-4498</b> and we will bail you out.</p>
+</div>
+
+<div class="col-lg-3 alarm-instructions well">
+<h3 class="sub-header">Your Account Details</h3>
+
+    <h5><i class="glyphicon glyphicon-user"></i> <b>User Name:</b> {{user.name}}</h5>
+    <h5><i class="glyphicon glyphicon-envelope"></i> <b>Email:</b> {{user.email}}</h5>
+    <h5><i class="glyphicon glyphicon-earphone"></i> <b>Phone:</b> {{user.phone}}</h5>
 </div>
 
 <div class="col-lg-12">
-    <h2 class="sub-header">Current Alarms</h2>
+    <h2 class="page-header">Current Alarms</h2>
 
     <div class="table-responsive">
         <table class="table table-striped">

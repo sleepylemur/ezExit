@@ -4,12 +4,9 @@ body {
   background-color: #eee;
 }
 
-h1 {
-  text-align: center;
-}
 
-h4 {
-  text-align: center;
+.alarm-instructions p {
+  font-size: 15px;
 }
 
 

@@ -18,7 +18,11 @@
   },
   "homepage": "https://github.com/sleepylemur/smoothexit",
   "dependencies": {
+    "body-parser": "^1.12.3",
+    "express": "^4.12.3",
     "express-jwt": "^3.0.0",
-    "node-forge": "^0.6.26"
+    "jsonwebtoken": "^5.0.0",
+    "node-forge": "^0.6.26",
+    "sqlite3": "^3.0.8"
   }
 }

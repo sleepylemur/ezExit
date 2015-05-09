@@ -1,0 +1,24 @@
+{
+  "name": "jsescape",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sleepylemur/smoothexit.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sleepylemur/smoothexit/issues"
+  },
+  "homepage": "https://github.com/sleepylemur/smoothexit",
+  "dependencies": {
+    "express-jwt": "^3.0.0",
+    "node-forge": "^0.6.26"
+  }
+}

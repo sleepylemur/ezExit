@@ -16,6 +16,18 @@ app.use(bodyParser.json({extended: false}));
 app.use(express.static('public'));
 
 
+// var alarminterval = setInterval(checkalarms, 5000);
+// function checkalarms() {
+//   var now = new Date().getTime();
+//   db.all("SELECT id FROM alarms "
+//    +"JOIN users ON  UWHERE time < ?",now, function(err,data) {
+//     if (data.length > 0) {
+//       // some alarms went off
+
+//     }
+//   });
+// }
+
 app.get('/api/excuses', function(req,res) {
   db.all("SELECT * FROM excuses", function(err,data) {
     if(err) throw(err);

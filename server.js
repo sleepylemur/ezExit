@@ -12,9 +12,6 @@ var twilioclient = require('twilio')(secrets.TWILIO_ACCT_SID, secrets.TWILIO_AUT
 
 var app = express();
 
-app.get('/', function(req,res) {
-  res.render('index.html');
-});
 
 // any route prefixed with api will be authenticated
 app.use('/api',expressJwt({secret:secrets.jwt}));
@@ -98,6 +95,10 @@ app.post('/textmessage', function(req,res) {
       res.status(401).send("No matching account for "+phone);
     }
   });
+});
+
+app.get('/', function(req,res) {
+  res.render('index.html');
 });
 
 // ajax excuses list for populating forms
@@ -209,4 +210,4 @@ app.post('/authenticate', function(req,res) {
   });
 });
 
-app.listen(3000);
+app.listen(3000, function(){console.log("listening to port 3000")});

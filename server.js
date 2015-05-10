@@ -8,7 +8,21 @@ var forge = require('node-forge');
 var db = new sqlite3.Database('db/excuses.db');
 var secrets = require('./secrets.json');
 
+var twilioclient = require('twilio')(secrets.TWILIO_ACCT_SID, secrets.TWILIO_AUTH_TOKEN);
+
 var app = express();
+
+// twilioclient.sendMessage({
+//   to:'9176991816',
+//   from:secrets.TWILIO_PHONE_NO,
+//   body:'hi cutie! xxxxxx!'
+// }, function(err,data) {
+//   if (err) {
+//     console.log(err);
+//   } else {
+//     console.log(data);
+//   }
+// });
 
 // any route prefixed with api will be authenticated
 app.use('/api',expressJwt({secret:secrets.jwt}));
@@ -25,9 +39,16 @@ function checkalarms() {
    +" WHERE time < ?", now, function(err,data) {
     if (data.length > 0) {
       console.log(data);
+      db.run("DELETE FROM alarms WHERE time < ?", now, function(err) {
+        if (err) throw(err);
+      });
     }
   });
 }
+
+app.post('/textmessage', function(req,res) {
+  console.log(req);
+});
 
 app.get('/api/excuses', function(req,res) {
   db.all("SELECT * FROM excuses", function(err,data) {

@@ -12,17 +12,9 @@ var twilioclient = require('twilio')(secrets.TWILIO_ACCT_SID, secrets.TWILIO_AUT
 
 var app = express();
 
-// twilioclient.sendMessage({
-//   to:'numberhere',
-//   from:secrets.TWILIO_PHONE_NO,
-//   body:'hi cutie! xxxxxx!'
-// }, function(err,data) {
-//   if (err) {
-//     console.log(err);
-//   } else {
-//     console.log(data);
-//   }
-// });
+app.get('/', function(req,res) {
+  res.render('index.html');
+});
 
 // any route prefixed with api will be authenticated
 app.use('/api',expressJwt({secret:secrets.jwt}));
@@ -30,12 +22,15 @@ app.use(bodyParser.json({extended: false}));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static('public'));
 
+// deal with jwt unauthorized sessions without spamming the terminal
 app.use(function (err, req, res, next) {
   if (err.name === 'UnauthorizedError') {
     res.status(401).send('invalid token...');
   }
 });
 
+
+// process alarms every 5 seconds
 var alarminterval = setInterval(checkalarms, 5000);
 function checkalarms() {
   var now = new Date().getTime();
@@ -44,7 +39,18 @@ function checkalarms() {
    +" JOIN excuses ON alarms.excuse_id = excuses.id"
    +" WHERE time < ?", now, function(err,data) {
     if (data.length > 0) {
-      console.log(data);
+      // console.log(data);
+      data.forEach(function(row) {
+
+        // send off an sms for each alarm that just went off
+        twilioclient.sendMessage({
+          to: row.phone,
+          from: secrets.TWILIO_PHONE_NO,
+          body: row.message
+        }, function(err,data) {
+          if (err) {console.log(err);}
+        });
+      });
       db.run("DELETE FROM alarms WHERE time < ?", now, function(err) {
         if (err) throw(err);
       });
@@ -79,15 +85,22 @@ app.post('/textmessage', function(req,res) {
         if (excuse_id > -1) {
           // we have a matching trigger so add our alarm
           console.log("added alarm");
-          db.run("INSERT INTO alarms (time,excuse_id,user_id) VALUES (?,?,?)", new Date().getTime()+5000, excuse_id, userdata.id, function(err) {
+          db.run("INSERT INTO alarms (time,excuse_id,user_id) VALUES (?,?,?)", new Date().getTime()+5*60*1000, excuse_id, userdata.id, function(err) {
             if (err) throw(err);
+            res.end();
           });
+        } else {
+          // behavior for no matching triggers goes here. currently we just ignore those texts.
+          res.end();
         }
       });
+    } else {
+      res.status(401).send("No matching account for "+phone);
     }
   });
 });
 
+// ajax excuses list for populating forms
 app.get('/api/excuses', function(req,res) {
   db.all("SELECT * FROM excuses", function(err,data) {
     if(err) throw(err);
@@ -95,6 +108,7 @@ app.get('/api/excuses', function(req,res) {
   });
 });
 
+// ajax alarm list for logged in user
 app.get('/api/alarms', function(req,res) {
   db.all("SELECT alarms.id,time,excuses.title,excuses.message FROM alarms JOIN excuses ON alarms.excuse_id = excuses.id WHERE user_id = ?", req.user.id, function(err,data) {
     if(err) throw(err);
@@ -102,14 +116,11 @@ app.get('/api/alarms', function(req,res) {
   });
 });
 
+// set alarm
 app.post('/api/alarms', function(req,res) {
   db.run("INSERT INTO alarms (time,excuse_id,user_id) VALUES (?,?,?)", req.body.time, req.body.excuse_id, req.user.id, function(err) {
     if (err) throw(err);
     res.end();
-    // db.get("SELECT alarms.id,time,excuses.title,excuses.message FROM alarms JOIN excuses ON alarms.excuse_id = excuses.id WHERE alarms.ROWID = ?", this.lastID, function(err,data) {
-    //   if (err) throw(err);
-    //   res.json(data);
-    // });
   });
 });
 
@@ -120,6 +131,59 @@ app.delete('/api/alarm/:id', function(req,res) {
   });
 });
 
+// ajax user data
+app.get('/api/user', function(req,res) {
+  db.get("SELECT name,email,phone FROM users WHERE id = ?", req.user.id, function(err,data) {
+    if (err) throw(err);
+    res.json({user: data});
+  });
+});
+
+// add a new user
+app.post('/users', function(req,res) {
+  //ensure nobody else has that email or phone
+  db.get("SELECT email FROM users WHERE email = ?", req.body.email, function(err,data) {
+    if (typeof data !== 'undefined') {
+      res.status(401).send("Email already tied to an account");
+    } else {
+      var phone = req.body.phone.replace(/[^0-9]/g,'');
+      if (phone.length !== 10) {
+        res.status(401).send("Need 10 digit phone number");
+      } else {
+        db.get("SELECT phone FROM users WHERE phone = ?", req.body.phone, function(err,data) {
+          if (typeof data !== 'undefined') {
+            res.status(401).send("Phone already tied to an account");
+          } else {
+
+            // email and phone are free so proceed
+
+            // salt and hash password using sha256
+            var md = forge.md.sha256.create();
+            var salt = forge.random.getBytesSync(16);
+            md.update(req.body.password + salt);
+
+            // add the user to the db
+            db.run("INSERT INTO users (name,phone,email,password,salt) VALUES (?,?,?,?,?)", req.body.name, phone, req.body.email, md.digest().toHex(), salt, function(err) {
+              if (err) throw(err);
+              db.get("SELECT * FROM users WHERE ROWID = ?", this.lastID, function(err,data) {
+                if (err) throw(err);
+                res.json(data);
+              });
+            });
+          }
+        });
+      }
+    }
+  });
+});
+
+// ajax test if session is valid
+app.get('/api/checksession', function(req,res) {
+  res.end();
+});
+
+
+// user login
 app.post('/authenticate', function(req,res) {
   db.get("SELECT * FROM users WHERE email = ?", req.body.email, function(err,data) {
     if (err) throw(err);
@@ -141,46 +205,6 @@ app.post('/authenticate', function(req,res) {
         //passwords don't match
         res.status(401).send('Wrong password');
       }
-    }
-  });
-});
-
-app.get('/api/checksession', function(req,res) {
-  res.json(true);
-});
-
-app.get('/', function(req,res) {
-  res.render('index.html');
-});
-
-app.get('/api/user', function(req,res) {
-  db.get("SELECT name,email,phone FROM users WHERE id = ?", req.user.id, function(err,data) {
-    if (err) throw(err);
-    res.json({user: data});
-  });
-});
-
-app.post('/users', function(req,res) {
-  //ensure nobody else has that email
-  db.get("SELECT email FROM users WHERE email = ?", req.body.email, function(err,data) {
-    var phone = req.body.phone.replace(/[^0-9]/g,'');
-    if (phone.length !== 10) {
-      res.status(401).send("Need 10 digit phone number");
-    } else if (typeof data !== 'undefined') {
-      res.status(401).send("Account already exists");
-    } else {
-      //email is free so proceed
-      var md = forge.md.sha256.create();
-      var salt = forge.random.getBytesSync(16);
-      md.update(req.body.password + salt);
-
-      db.run("INSERT INTO users (name,phone,email,password,salt) VALUES (?,?,?,?,?)", req.body.name, phone, req.body.email, md.digest().toHex(), salt, function(err) {
-        if (err) throw(err);
-        db.get("SELECT * FROM users WHERE ROWID = ?", this.lastID, function(err,data) {
-          if (err) throw(err);
-          res.json(data);
-        });
-      });
     }
   });
 });

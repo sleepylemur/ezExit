@@ -13,7 +13,7 @@ var twilioclient = require('twilio')(secrets.TWILIO_ACCT_SID, secrets.TWILIO_AUT
 var app = express();
 
 // twilioclient.sendMessage({
-//   to:'9176991816',
+//   to:'numberhere',
 //   from:secrets.TWILIO_PHONE_NO,
 //   body:'hi cutie! xxxxxx!'
 // }, function(err,data) {
@@ -27,8 +27,14 @@ var app = express();
 // any route prefixed with api will be authenticated
 app.use('/api',expressJwt({secret:secrets.jwt}));
 app.use(bodyParser.json({extended: false}));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static('public'));
 
+// app.use(function (err, req, res, next) {
+//   if (err.name === 'UnauthorizedError') {
+//     res.send(401, 'invalid token...');
+//   }
+// });
 
 var alarminterval = setInterval(checkalarms, 5000);
 function checkalarms() {

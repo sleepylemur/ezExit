@@ -60,7 +60,7 @@ angular.module('excuses', ['ngRoute','ngResource'])
     };
   })
 
-  .controller('NewUserController', function($scope, $http, $location) {
+  .controller('NewUserController', function($scope, $http, $location, $window) {
     $scope.newUser = function() {
       // console.log({
       //   name: $scope.name,
@@ -75,16 +75,15 @@ angular.module('excuses', ['ngRoute','ngResource'])
         password: $scope.password
       })
         .success(function() {
-          alert('yay!');
-          // $http.post('/authenticate', {email:$scope.email, password:$scope.password})
-          //   .success(function (data,status,headers,config) {
-          //     $window.sessionStorage.token = data.token;
-          //     $location.path('/user');
-          //   })
-          //   .error(function (data,status,headers,config) {
-          //     delete $window.sessionStorage.token;
-          //     alert("Error: Unknown email/password combination");
-          //   });
+          $http.post('/authenticate', {email:$scope.email, password:$scope.password})
+            .success(function (data,status,headers,config) {
+              $window.sessionStorage.token = data.token;
+              $location.path('/user');
+            })
+            .error(function (data,status,headers,config) {
+              delete $window.sessionStorage.token;
+              alert(data);
+            });
         })
         .error(function(err) {
           alert(err);

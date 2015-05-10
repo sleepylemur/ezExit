@@ -30,11 +30,11 @@ app.use(bodyParser.json({extended: false}));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static('public'));
 
-// app.use(function (err, req, res, next) {
-//   if (err.name === 'UnauthorizedError') {
-//     res.send(401, 'invalid token...');
-//   }
-// });
+app.use(function (err, req, res, next) {
+  if (err.name === 'UnauthorizedError') {
+    res.status(401).send('invalid token...');
+  }
+});
 
 var alarminterval = setInterval(checkalarms, 5000);
 function checkalarms() {
@@ -52,8 +52,40 @@ function checkalarms() {
   });
 }
 
+// receive text message
+// match to our users and excuses, and set up an alarm in 5 minutes for their escape.
 app.post('/textmessage', function(req,res) {
-  console.log(req);
+  var phone = req.body.From.slice(2); //chop off the leading +1
+  db.get("SELECT id FROM users WHERE phone = ?", phone, function(err,userdata) {
+    if (err) throw(err);
+    // make sure this phone number has an account tied to it
+    if (typeof userdata !== 'undefined') {
+      db.all("SELECT trigger,id FROM excuses", function(err,data) {
+        if (err) throw(err);
+        console.log(JSON.stringify(data));
+
+        // find the trigger that matches earliest in the sms body
+        var minindex = 0;
+        var excuse_id = -1;
+        data.forEach(function(row) {
+          var i = req.body.Body.indexOf(row.trigger);
+          console.log(JSON.stringify(row));
+          console.log("i = "+i);
+          if (i != -1 && (excuse_id === -1 || i < minindex)) {
+            minindex = i;
+            excuse_id = row.id;
+          }
+        });
+        if (excuse_id > -1) {
+          // we have a matching trigger so add our alarm
+          console.log("added alarm");
+          db.run("INSERT INTO alarms (time,excuse_id,user_id) VALUES (?,?,?)", new Date().getTime()+5000, excuse_id, userdata.id, function(err) {
+            if (err) throw(err);
+          });
+        }
+      });
+    }
+  });
 });
 
 app.get('/api/excuses', function(req,res) {
@@ -131,7 +163,10 @@ app.get('/api/user', function(req,res) {
 app.post('/users', function(req,res) {
   //ensure nobody else has that email
   db.get("SELECT email FROM users WHERE email = ?", req.body.email, function(err,data) {
-    if (typeof data !== 'undefined') {
+    var phone = req.body.phone.replace(/[^0-9]/g,'');
+    if (phone.length !== 10) {
+      res.status(401).send("Need 10 digit phone number");
+    } else if (typeof data !== 'undefined') {
       res.status(401).send("Account already exists");
     } else {
       //email is free so proceed
@@ -139,7 +174,7 @@ app.post('/users', function(req,res) {
       var salt = forge.random.getBytesSync(16);
       md.update(req.body.password + salt);
 
-      db.run("INSERT INTO users (name,phone,email,password,salt) VALUES (?,?,?,?,?)", req.body.name, req.body.phone, req.body.email, md.digest().toHex(), salt, function(err) {
+      db.run("INSERT INTO users (name,phone,email,password,salt) VALUES (?,?,?,?,?)", req.body.name, phone, req.body.email, md.digest().toHex(), salt, function(err) {
         if (err) throw(err);
         db.get("SELECT * FROM users WHERE ROWID = ?", this.lastID, function(err,data) {
           if (err) throw(err);

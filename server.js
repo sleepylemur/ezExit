@@ -16,17 +16,18 @@ app.use(bodyParser.json({extended: false}));
 app.use(express.static('public'));
 
 
-// var alarminterval = setInterval(checkalarms, 5000);
-// function checkalarms() {
-//   var now = new Date().getTime();
-//   db.all("SELECT id FROM alarms "
-//    +"JOIN users ON  UWHERE time < ?",now, function(err,data) {
-//     if (data.length > 0) {
-//       // some alarms went off
-
-//     }
-//   });
-// }
+var alarminterval = setInterval(checkalarms, 5000);
+function checkalarms() {
+  var now = new Date().getTime();
+  db.all("SELECT excuses.message, users.phone FROM alarms"
+   +" JOIN users ON alarms.user_id = users.id"
+   +" JOIN excuses ON alarms.excuse_id = excuses.id"
+   +" WHERE time < ?", now, function(err,data) {
+    if (data.length > 0) {
+      console.log(data);
+    }
+  });
+}
 
 app.get('/api/excuses', function(req,res) {
   db.all("SELECT * FROM excuses", function(err,data) {

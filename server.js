@@ -65,15 +65,12 @@ app.post('/textmessage', function(req,res) {
     if (typeof userdata !== 'undefined') {
       db.all("SELECT trigger,id FROM excuses", function(err,data) {
         if (err) throw(err);
-        console.log(JSON.stringify(data));
 
         // find the trigger that matches earliest in the sms body
         var minindex = 0;
         var excuse_id = -1;
         data.forEach(function(row) {
           var i = req.body.Body.indexOf(row.trigger);
-          console.log(JSON.stringify(row));
-          console.log("i = "+i);
           if (i != -1 && (excuse_id === -1 || i < minindex)) {
             minindex = i;
             excuse_id = row.id;
@@ -81,7 +78,6 @@ app.post('/textmessage', function(req,res) {
         });
         if (excuse_id > -1) {
           // we have a matching trigger so add our alarm
-          console.log("added alarm");
           db.run("INSERT INTO alarms (time,excuse_id,user_id) VALUES (?,?,?)", new Date().getTime()+5*60*1000, excuse_id, userdata.id, function(err) {
             if (err) throw(err);
             res.end();

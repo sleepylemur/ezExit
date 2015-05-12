@@ -1,6 +1,7 @@
 angular.module('excuses', ['ngRoute','ngResource'])
   .controller('MainController', function($window,$scope,$route,$http,$location) {
     $scope.session = $window.sessionStorage;
+    $scope.location = $location;
     $http.get('api/checksession')
       .success(function() {
       })
@@ -62,12 +63,6 @@ angular.module('excuses', ['ngRoute','ngResource'])
 
   .controller('NewUserController', function($scope, $http, $location, $window) {
     $scope.newUser = function() {
-      // console.log({
-      //   name: $scope.name,
-      //   phone: $scope.phone,
-      //   email: $scope.email,
-      //   password: $scope.password
-      // });
       $http.post('/users', {
         name: $scope.name,
         phone: $scope.phone,
@@ -87,6 +82,27 @@ angular.module('excuses', ['ngRoute','ngResource'])
         })
         .error(function(err) {
           alert(err);
+        });
+    }
+  })
+
+  .controller('EditUserController', function($scope, $http, $location, $window) {
+    $http.get('api/user').success(function (data) {
+      $scope.user = data.user;
+    });
+
+    $scope.updateUser = function() {
+      $http.put('api/edituser', {
+        name: $scope.user.name,
+        phone: $scope.user.phone,
+        email: $scope.user.email,
+        password: $scope.user.password
+      })
+        .success(function() {
+          $location.path('/user');
+        })
+        .error(function (data,status,headers,config) {
+          alert(data);
         });
     }
   })
@@ -113,6 +129,10 @@ angular.module('excuses', ['ngRoute','ngResource'])
   .config(function($routeProvider, $httpProvider) {
     $httpProvider.interceptors.push('authInterceptor');
     $routeProvider
+      .when('/', {
+        templateUrl: 'templates/login.html',
+        controller: 'LoginController'
+      })
       .when('/login', {
         templateUrl: 'templates/login.html',
         controller: 'LoginController'
@@ -124,5 +144,9 @@ angular.module('excuses', ['ngRoute','ngResource'])
       .when('/users/new', {
         templateUrl: 'templates/newuser.html',
         controller: 'NewUserController'
+      })
+      .when('/users/edit', {
+        templateUrl: 'templates/edituser.html',
+        controller: 'EditUserController'
       });
     });

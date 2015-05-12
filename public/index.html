@@ -31,24 +31,24 @@
                 <span class="icon-bar"></span> 
                 <span class="icon-bar"></span>
                 </button> 
-                <a class="navbar-brand" href="/">Smooth Exit</a>
+                <a class="navbar-brand" href="#/">Smooth Exit</a>
             </div>
 
             <div class="navbar-collapse collapse" id="navbar">
                 <ul class="nav navbar-nav navbar-right" ng-controller="MainController">
-                    <li ng-hide="session.token">
+                    <li ng-hide="session.token || location.$$url === '/login'">
                         <a href="/#/login">Login</a>
                     </li>
                       <li ng-hide="!session.token">
                         <a ng-click="logout()" >Logout</a>
                     </li>
-                    <li ng-hide="session.token">
+                    <li ng-hide="session.token || location.$$url === '/users/new'">
                         <a href="/#/users/new">Sign Up</a>
                     </li>
-                    <li ng-hide="!session.token">
-                        <a href="/#/users/new">Edit Profile</a>
+                    <li ng-hide="!session.token || location.$$url === '/users/edit'">
+                        <a href="/#/users/edit">Edit Profile</a>
                     </li>
-                    <li ng-hide="!session.token">
+                    <li ng-hide="!session.token || location.$$url === '/user'">
                         <a href="/#/user/">Set Alarms</a>
                     </li>
                 </ul>

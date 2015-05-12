@@ -174,6 +174,47 @@ app.post('/users', function(req,res) {
   });
 });
 
+// update user
+app.put('/api/edituser', function(req,res) {
+
+  //ensure nobody else has that email or phone
+  db.get("SELECT email FROM users WHERE email = ? AND id != ?", req.body.email, req.user.id, function(err,data) {
+    if (err) throw(err);
+    if (typeof data !== 'undefined') {
+      res.status(401).send("Sorry, that email is in use by another account");
+    } else {
+      var phone = req.body.phone.replace(/[^0-9]/g,'');
+      if (phone.length !== 10) {
+        res.status(401).send("Need 10 digit phone number");
+      } else {
+        db.get("SELECT phone FROM users WHERE phone = ? AND id != ?", phone, req.user.id, function(err,data) {
+          if (err) throw(err);
+          if (typeof data !== 'undefined') {
+            res.status(401).send("Sorry, that phone number is in use by another account");
+          } else {
+            // email and phone are free so proceed
+
+            // check that salted hashed password matches
+            db.get("SELECT * FROM users WHERE id = ?", req.user.id, function(err,data) {
+              var md = forge.md.sha256.create();
+              md.update(req.body.password + data.salt);
+              if (md.digest().toHex() === data.password) {
+                // password matches, so do update
+                db.run("UPDATE users SET name=?,email=?,phone=? WHERE id=?", req.body.name,req.body.email,phone,req.user.id,function(err) {
+                  if (err) throw(err);
+                  res.end();
+                });
+              } else {
+                res.status(401).send("Password doesn't match");
+              }
+            });
+          }
+        });
+      }
+    }
+  });
+});
+
 // ajax test if session is valid
 app.get('/api/checksession', function(req,res) {
   res.end();

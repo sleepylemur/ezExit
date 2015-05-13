@@ -1,3 +1,4 @@
+
 angular.module('excuses', ['ngRoute','ngResource'])
   .controller('MainController', function($window,$scope,$route,$http,$location) {
     $scope.session = $window.sessionStorage;

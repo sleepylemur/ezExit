@@ -1,0 +1,13 @@
+<form ng-submit="updateUser()" class="form-signin">
+    <h2 class="form-signin-heading">Setup your Account</h2>
+    <label class="sr-only" for="inputName">Your Full Name</label>
+    <input ng-model="user.name" autofocus="" class="form-control" id="inputName" placeholder="Enter your full name" required="" type="text"> 
+    <label class="sr-only" for="inputPhone">Your Mobile Phone Number</label> 
+    <input ng-model="user.phone" class="form-control" id="inputPhone" placeholder="Your Mobile Phone Number" required="" type="text">
+    <label class="sr-only" for="inputEmail">Email address</label>
+    <input ng-model="user.email" class="form-control" id="inputEmail" placeholder="Email address" required="" type="email"> 
+    <label class="sr-only" for="inputPassword">Password</label> 
+    <input ng-model="user.password" class="form-control" id="inputPassword" placeholder="Password" required="" type="password"> 
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Update Profile</button>
+</form>
+    

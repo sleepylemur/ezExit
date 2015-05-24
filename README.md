@@ -1,5 +1,5 @@
-Other name ideas: Short Message Sidestep  , Eschewal
-#Smooth Exit
+
+#[ezExit](http://evangriffiths.nyc:3203)
 
 ###Make your way out of an awkward situation
 #### Developed by Evan and Xavier at [General Assembly](http://generalassemb.ly) mini-hackathon using the [Twillo API](https://www.twilio.com/)  
